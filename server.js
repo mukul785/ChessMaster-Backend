@@ -60,10 +60,11 @@ io.on('connection', (socket) => {
             });
         }
     });
-
+    
     socket.on('moveMade', ({ gameId, newPosition, newMove, piece }) => {
         const game = games.get(gameId);
         if (game && game.status === 'active') {
+            console.log(piece[0] + " checked with turn: " + game.turn);
             if (piece[0] === game.turn) {
                 const newTurn = piece[0] === 'w' ? 'b' : 'w';
                 game.currentPosition = newPosition;
@@ -72,6 +73,7 @@ io.on('connection', (socket) => {
                     game.movesList.push([newMove, '']);
                 } else {
                     // For black's move, complete the last move pair
+                    console.log("blacked moved");
                     const lastIndex = game.movesList.length - 1;
                     if (lastIndex >= 0) {
                         game.movesList[lastIndex][1] = newMove;
@@ -79,8 +81,9 @@ io.on('connection', (socket) => {
                 }
                 game.turn = newTurn;
 
-                // Broadcast to ALL players
-                io.to(gameId).emit('moveMade', {
+                // Broadcast to OTHER players
+                socket.to(gameId).emit('moveMade', {
+                    gameId,
                     newPosition,
                     newMove,
                     turn: newTurn,
